@@ -1,0 +1,47 @@
+# Eli Bolotin
+# Twitter Sentiment Analysis Program
+# Copyright 2018, All Rights Reserved.
+
+Steps for program workflow:
+
+1. Stream tweets for group 1 and 2 (Python step)
+	- example: stream_tweets(workout_keyterms, option = 'user_info', file_name = 'streamed_tweets_workout', num_users = 2000)
+	- Examine 'streamed_tweets_workout' to review 2000 tweets (manual step).
+	- input: none
+	- returns: json filename
+	- creates: json file and csv file
+
+2. Clean the streamed tweets via program algorithm (Python step)
+	- example: clean_tweets("streamed_tweets_workout.json")
+	- Examine cleaned tweets and make changes if necessary.
+	- input: json file
+	- returns: csv file for streamed tweets
+	- output: csv file for streamed tweets
+
+3. Fetch other tweets in full data format for users in streamed groups of tweets (Python step). Store the full data, but present the user with a column-truncated version for readability.
+	- example: get_full_tweets('streamed_tweets_workout.csv')
+	- Examine the truncated tweets to review fetched tweets (manual step)
+	- input: csv file
+	- returns: json
+	- output: csv and json
+
+4. Clean the fetched & truncated tweets via algorithm (Python step)
+	- clean_tweets("streamed_tweets_workout_clean_truncated.json", tweets_type = "REST")
+	- input: json
+	- returns: json
+	- output: json for full tweet data
+
+5. Produce analysis of tweets
+	- input: json
+	- returns: csv
+	- output: csv
+
+
+1. user instantiates an object based on streamed user tweets.
+
+next, he can:
+	- 2 - clean streamed tweets (or not)
+	- 3 - get_full_tweets
+	- 4 - clean full tweets (must do 3)
+	- 5 - analyze full tweets (must do 3 and 4)
+

@@ -53,7 +53,7 @@ def print_status(func):
 		elif func.__name__ == 'get_full_tweets':
 			print("\t - Fetching full tweets ... ", end="")
 
-		elif func.__name__ == 'analyze_tweets':
+		elif func.__name__ == 'get_sentiment':
 			print("\t - Analyzing tweet sentiment ... ", end="")
 
 		obj = func(self, **kwargs)
@@ -121,9 +121,9 @@ class TweetProgram:
 			return False
 		
 		# check if full tweets have already been cleaned before.
-		elif self.step_4_cleaned_full_tweets == 1 and self.tweets_type == "full":
-			print(f"Message: You already cleaned the full tweets for this stream. Truncated file here: '{self.full_tweets_trunc_clean_csv}'")
-			return False
+		# elif self.step_4_cleaned_full_tweets == 1 and self.tweets_type == "full":
+		# 	print(f"Message: You already cleaned the full tweets for this stream. Truncated file here: '{self.full_tweets_trunc_clean_csv}'")
+		# 	return False
 
 		# if streamed tweets have not been cleaned before, then open the streamed tweets.
 		if self.step_2_cleaned_streamed_tweets == 0 and self.tweets_type == "stream":
@@ -154,7 +154,7 @@ class TweetProgram:
 			tweet.append(text_len)
 
 		# regex pattern to filter out invalid tweets from streamed data. See readme for details.
-		if tweets_type == 'stream':
+		if self.tweets_type == 'stream':
 			regex = re.compile(r'^(\d)+|^(#\w\b)+|^\"|^\*|^[A-Z]{5, }|[A-Z]$|^How|^The\s\d+|^Photos|(\'\')+|(free|buy|get|class|connect|discount|now|read|job|video|news|follow|added|review|publish|clubs|manager|study|success|limited|release|help|gift|ideas|massage|schedule|services|check|join|pain|therapy|alternative|new\schallenge|product|need|learn|for\smen|for\swomen|revolution|leadership|weight\sloss|diet\splan|ebay|click|promo|certified|store|pick|sign|log-in|login|tips|meet|secret|improve|listen|(\w+)for(\w+)|trainer)|(\$|\+|\@|\?|\?$)|(\.\n\.)|^$', re.IGNORECASE)
 		
 		# regex pattern to filter out invalid tweets from full data. See readme.
@@ -174,7 +174,7 @@ class TweetProgram:
 			median = math.ceil(statistics.mean(hashtag_counts))
 
 		# remove tweets that are 50% or more similar to eachother.
-		if tweets_type == "REST":
+		if self.tweets_type == "full":
 			for i in range(1, len(tweets)):
 				current_tweet = tweets[i][3]
 				past_tweet = tweets[i-1][3]
@@ -393,9 +393,10 @@ class TweetProgram:
 		return(self.full_tweets_trunc_json)
 
 	@print_status
-	def analyze_tweets(self):
+	def get_sentiment(self):
 		# make sure that tweets have not already been analyzed
-		if self.step_5_analyzed_full_tweets != 1:
+		if 1 == 1:
+		# if self.step_5_analyzed_full_tweets != 1:
 			# make sure that tweets are full and cleaned
 			if self.step_3_fetched_full_tweets == 1 and self.step_4_cleaned_full_tweets == 1:
 				try:

@@ -22,7 +22,7 @@ group_1.get_full_tweets()
 group_1.clean_tweets(tweets_type = "full")
 
 # ### step 5 - produce sentiment analysis of cleaned tweets. Remember, we are cleaning the full file, not the truncated version (which is the same as the full file, only less columns for readability).
-group_1.analyze_tweets()
+group_1.get_sentiment()
 
 ######### Group 2 #########
 
@@ -38,4 +38,4 @@ group_2.get_full_tweets()
 group_2.clean_tweets(tweets_type = "full")
 
 ### step 5 - produce sentiment analysis of cleaned tweets. Remember, we are cleaning the full file, not the truncated version (which is the same as the full file, only less columns for readability).
-group_2.analyze_tweets()
+group_2.get_sentiment()

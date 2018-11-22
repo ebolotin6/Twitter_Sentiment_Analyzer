@@ -11,6 +11,7 @@ import dill
 import re
 import math
 import statistics
+from os import makedirs
 from twitter_credentials import *
 from textblob import TextBlob as tb
 from profanity import profanity
@@ -26,23 +27,36 @@ api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 
 # Save and load instances of TweetProgram class to/from local storage. 
 # Details: This program is class-based to allow for data persistence. Data persistence allows us to create an object once, run a method (or more), end the program, and then come back and start from where we left off. Said differently, this allows the user to run a method on the same object between program executions. To achieve this end (save an object's state outside program execution), we use serialization. Specifically, the 'dill' package (serialization) is employed in this program.
-def StreamedTweets(file_name_json):
+def StreamedTweets(file_name_json, sub_dir):
 	file_name = file_name_json.split(".")[0]
-	
+
 	try:
-		with open(file_name + '.pkl', 'rb') as f:
-			obj = dill.load(f)
-			message = f"Loaded '{file_name_json}' into memory."
+		abs_file_path, abs_sub_dir = get_abs_path(file_name, sub_dir)
+		file_name_pkl = abs_file_path + '.pkl'
+
+		if os.path.exists(file_name_pkl):
+			with open(file_name_pkl, 'rb') as f:
+				obj = dill.load(f)
+				message = f"Loaded '{file_name_json}' into memory."
+
+		else:
+			abs_file_name_json = abs_file_path + '.json'
+
+			if os.path.exists(abs_file_name_json):
+				with open(file_name_pkl, 'wb') as f:
+					obj = TweetProgram(abs_file_name_json)
+					dill.dump(obj, f)
+					message = f"Created '{file_name_json}' stream to work on."
+			else:
+				print(f"JSON file '{file_name_json}' does not exist.")
+				return False
+		
+		print(f"--------------------------------------------------------------\n {message} \n--------------------------------------------------------------")
+
+		return(obj)
 
 	except Exception as e:
-		with open(file_name + '.pkl', 'wb') as f:
-			obj = TweetProgram(file_name_json)
-			dill.dump(obj, f)
-			message = f"Created '{file_name_json}' stream to work on."
-	
-	print(f"--------------------------------------------------------------\n {message} \n--------------------------------------------------------------")
-	
-	return(obj)
+		print("Error: ", e)
 
 # decorator for TweetProgram class methods that prints the activity of a given method.
 def print_status(func):
@@ -58,30 +72,57 @@ def print_status(func):
 
 		obj = func(self, **kwargs)
 		return obj
-	return wrapper 
+	return wrapper
+
+# function to get abs_path of files in sub directories
+def get_abs_path(file_name, sub_dir):
+	cwd = os.path.dirname(__file__)
+
+	if os.path.exists(sub_dir):
+		rel_file_path = sub_dir + "/" + file_name
+		abs_file_path = os.path.join(cwd, rel_file_path)
+		abs_sub_dir = os.path.join(cwd, sub_dir)
+		return(abs_file_path, abs_sub_dir)
+	else:
+		print("Incorrect directory.")
+		return False
 
 # class for tweet stream json objects that need to be cleaned, fetched in full, and analyzed for sentiment.
 class TweetProgram:
 	def __init__(self, file_name, tweets_type = "stream"):
 		# set file names at various stages of tweet stream processing
-		if os.path.isfile(file_name) == True:
-			self.step_1_streamed_tweets_present = 1
-			self.streamed_tweets_filename = file_name.split(".")[0]
-			self.streamed_tweets_json = file_name
-			self.cleaned_streamed_tweets_csv = self.streamed_tweets_filename + "_clean.csv"
-			self.full_tweets_json = self.cleaned_streamed_tweets_csv.split(".")[0] + "_full.json"
-			self.full_tweets_trunc_json = self.full_tweets_json.split(".")[0] + "_trunc.json"
-			self.full_tweets_trunc_csv = self.full_tweets_json.split(".")[0] + "_trunc.csv"
-			self.full_tweets_trunc_clean_json = self.full_tweets_trunc_json.split(".")[0] + "_clean.json"
-			self.full_tweets_trunc_clean_csv = self.full_tweets_trunc_csv.split(".")[0] + "_clean.csv"
-			self.full_tweets_analysis_csv = self.full_tweets_json.split(".")[0] + "_analysis.csv"
-		else:
-			self.step_1_streamed_tweets_present == 0
+		self.sub_dir = os.path.split(file_name)[1]
+		self.streamed_tweets_json = file_name
+		self.streamed_tweets_filename = os.path.splitext(self.streamed_tweets_json)[0]
+		self.cleaned_streamed_tweets_csv = self.streamed_tweets_filename + "_clean.csv"
+		self.full_tweets_json = self.cleaned_streamed_tweets_csv.split(".")[0] + "_full.json"
+		self.full_tweets_trunc_json = self.full_tweets_json.split(".")[0] + "_trunc.json"
+		self.full_tweets_trunc_csv = self.full_tweets_json.split(".")[0] + "_trunc.csv"
+		self.full_tweets_trunc_clean_json = self.full_tweets_trunc_json.split(".")[0] + "_clean.json"
+		self.full_tweets_trunc_clean_csv = self.full_tweets_trunc_csv.split(".")[0] + "_clean.csv"
+		self.full_tweets_analysis_csv = self.full_tweets_json.split(".")[0] + "_analysis.csv"
 		
-		self.step_2_cleaned_streamed_tweets = 0
-		self.step_3_fetched_full_tweets = 0
-		self.step_4_cleaned_full_tweets = 0
-		self.step_5_analyzed_full_tweets = 0
+		self.step_1_streamed_tweets_present = 1
+		
+		if os.path.exists(self.cleaned_streamed_tweets_csv):
+			self.step_2_cleaned_streamed_tweets = 1
+		else:
+			self.step_2_cleaned_streamed_tweets = 0
+		
+		if os.path.exists(self.full_tweets_trunc_json):
+			self.step_3_fetched_full_tweets = 1
+		else:
+			self.step_3_fetched_full_tweets = 0
+
+		if os.path.exists(self.full_tweets_trunc_clean_json):
+			self.step_4_cleaned_full_tweets = 1
+		else:
+			self.step_4_cleaned_full_tweets = 0
+
+		if os.path.exists(self.full_tweets_analysis_csv):
+			self.step_5_analyzed_full_tweets = 1
+		else:
+			self.step_5_analyzed_full_tweets = 0
 
 		# set filename for pickled object (self)
 		self.obj_name = self.streamed_tweets_filename + ".pkl"
@@ -102,8 +143,17 @@ class TweetProgram:
 
 	# load instance from local storage
 	def load_obj(self):
-		with open(self.obj_name, 'wb') as f:
+		with open(self.obj_name, 'rb') as f:
 			dill.load(self, f)
+
+	def reset_obj(self):
+		self.step_1_streamed_tweets_present = 1
+		self.step_2_cleaned_streamed_tweets = 0
+		self.step_3_fetched_full_tweets = 0
+		self.step_4_cleaned_full_tweets = 0
+		self.step_5_analyzed_full_tweets = 0
+
+		self.save_obj()
 
 	# Decorator and clean_tweets method. This method cleans & filters a json dict of tweets and returns both json and csv files of the tweets data. 
 	# Details: There 2 types of tweets data. One is the 'stream' data, which is the original, streamed data. Streamed data contains 5 fields related to each streamed tweet. These are mostly user fields and there are only 5 of them because streamed data is meant to be observed, not analyzed. The other is a 'full' data, which is fetched using the streamed data. Full data is defined as the: the most recent 20 tweets that are written by each author of the first hundred tweets in the streamed data. The full data is stored as a (json) dictionary and contains all fields related to every tweet.
@@ -115,16 +165,6 @@ class TweetProgram:
 		else:
 			self.tweets_type = tweets_type
 
-		# check if streamed tweets have already been cleaned before.
-		if self.step_2_cleaned_streamed_tweets == 1 and self.tweets_type == "stream":
-			print(f"Message: You already cleaned your tweet stream. Csv file here: '{self.cleaned_streamed_tweets_csv}'")
-			return False
-		
-		# check if full tweets have already been cleaned before.
-		# elif self.step_4_cleaned_full_tweets == 1 and self.tweets_type == "full":
-		# 	print(f"Message: You already cleaned the full tweets for this stream. Truncated file here: '{self.full_tweets_trunc_clean_csv}'")
-		# 	return False
-
 		# if streamed tweets have not been cleaned before, then open the streamed tweets.
 		if self.step_2_cleaned_streamed_tweets == 0 and self.tweets_type == "stream":
 			try:
@@ -132,8 +172,17 @@ class TweetProgram:
 					tweets = json.load(file)
 			
 			except Exception as e:
-				print(f"Message: Streamed tweets file not found: '{self.streamed_tweets_json}'")
+				print(f"Message: Streamed tweets file not found: '{os.path.relpath(self.streamed_tweets_json)}'")
 				return False
+		# check if streamed tweets have already been cleaned before.
+		elif self.step_2_cleaned_streamed_tweets == 1 and self.tweets_type == "stream":
+			print(f"Message: You already cleaned your tweet stream. Csv file here: '{os.path.relpath(self.cleaned_streamed_tweets_csv)}'")
+			return False
+
+		# check if full tweets have already been cleaned before.
+		elif self.step_4_cleaned_full_tweets == 1 and self.tweets_type == "full":
+			print(f"Message: You already cleaned the full tweets for this stream. Truncated file here: '{os.path.relpath(self.full_tweets_trunc_clean_csv)}'")
+			return False
 		
 		# if full tweets data is available, then open it.
 		elif self.step_3_fetched_full_tweets == 1 and self.tweets_type == "full":
@@ -142,7 +191,7 @@ class TweetProgram:
 					tweets = json.load(file)
 			
 			except Exception as e:
-				print(f"Message: Full tweets file not found: '{self.full_tweets_trunc_json}'")
+				print(f"Message: Full tweets file not found: '{os.path.relpath(self.full_tweets_trunc_json)}'")
 				return False
 
 		# for every tweet, remove all links and get text length
@@ -166,8 +215,11 @@ class TweetProgram:
 		all_indices = [i for i in range(len(tweets))]
 		excluded_indices = []
 
-		# get median hashtag count
+		# get median hashtag count and also a list of hashtag counts
 		median, hashtag_counts = self._get_median_hashtags(tweets)
+
+		# get stdev of hashtag count
+		stdev = math.ceil(statistics.stdev(hashtag_counts))
 		
 		# if median is 0, then use mean
 		if median == 0:
@@ -187,9 +239,10 @@ class TweetProgram:
 		for i, values in enumerate(zip(tweets, hashtag_counts)):
 			tweet = values[0][3]
 			hashtag_count = values[1]
+			mid_68 = median + stdev
 
-			# exclude tweets that have profanity or a hashtag_count above the median/mean
-			if profanity.contains_profanity(tweet) == True or hashtag_count > median:
+			# exclude tweets that have profanity or a hashtag_count above the median + 1 stdev
+			if profanity.contains_profanity(tweet) == True or hashtag_count > mid_68:
 				excluded_indices.append(i)
 			else:
 				match = regex.search(tweet)
@@ -225,13 +278,13 @@ class TweetProgram:
 
 				self.step_4_cleaned_full_tweets = 1
 				self.save_obj()
-				print(f"Successfully cleaned tweets. See json file for analysis: '{output_filename_json}'")
+				print(f"Successfully cleaned tweets. See csv file for review: '{os.path.relpath(output_filename_csv)}'")
 				return output_filename_json
 
 			else:
 				self.step_2_cleaned_streamed_tweets = 1
 				self.save_obj()
-				print(f"Successfully cleaned tweets. See csv file for review: '{output_filename_csv}'")
+				print(f"Successfully cleaned tweets. See csv file for review: '{os.path.relpath(output_filename_csv)}'")
 				return output_filename_csv
 		
 		except Exception as e:
@@ -272,13 +325,16 @@ class TweetProgram:
 	def get_full_tweets(self, tweets_cleaned = "yes", max_tweets = None, max_users = None):
 		# if streamed tweets have been fetched in full before, return false
 		if self.step_3_fetched_full_tweets == 1:
-			print(f"Message: You already fetched full (other) tweets for this stream. Truncated file here: '{self.full_tweets_trunc_csv}'")
+			print(f"Message: You already fetched full (other) tweets for this stream. Truncated file here: '{os.path.relpath(self.full_tweets_trunc_csv)}'")
 			return False
 
-		if max_tweets == None:
-			max_tweets = self.max_tweets
-		if max_users == None:
-			max_users = self.max_users		
+		# default is 20 most recent tweets per user
+		if max_tweets != None:
+			self.max_tweets = max_tweets
+
+		# default is 100 (first from top) users in streamed tweets file
+		if max_users != None:
+			self.max_users = max_users
 
 		# Determine whether to accept a csv or json as input based on if the input tweets have been cleaned before.
 		if tweets_cleaned == "yes":
@@ -300,11 +356,14 @@ class TweetProgram:
 		
 		for tweet in tweets_list:
 			user_id = int(tweet[2])
-			user_ids.append(user_id)
+			
+			# filter to get only unique users
+			if user_id not in user_ids:
+				user_ids.append(user_id)
 
 		# select top 100 user_ids from streamed data
-		if isinstance(max_users, int):
-			user_ids = user_ids[:max_users]
+		if isinstance(self.max_users, int):
+			user_ids = user_ids[:self.max_users]
 
 		all_tweets = []
 		
@@ -312,8 +371,8 @@ class TweetProgram:
 			user_tweets = []
 
 			try:
-				# search user timeline of top 100 users from streamed tweet data, and pull 20 tweets max for each user.
-				for tweet in tweepy.Cursor(api.user_timeline, user_id = user_id,  include_entities = True).items(max_tweets):
+				# search user timeline of top [max_users] users from streamed tweet data, and pull 20 tweets max for each user.
+				for tweet in tweepy.Cursor(api.user_timeline, user_id = user_id,  include_entities = True).items(self.max_tweets):
 					data = tweet._json
 
 					# define some columns to filter out of the API request.
@@ -334,9 +393,11 @@ class TweetProgram:
 				
 				all_tweets.append(user_tweets)
 
+			# Passing on the error because 401 response codes can happen if a user's tweets are private.
 			except tweepy.TweepError as e:
-				print("Error: ", e)
-				return False
+				# print("Error: ", e)
+				# return False
+				pass
 
 			if len(all_tweets) % 10 == 0:
 				with open(self.full_tweets_json, 'a') as file:
@@ -347,7 +408,7 @@ class TweetProgram:
 		# for readability, create a truncated version of the full json file in both json and csv format.
 		try:
 			output_filename_json = self._truncate_and_transform(self.full_tweets_json)
-			print(f"Successfully collected {max_tweets} for {max_users}. See csv: '{self.full_tweets_trunc_csv}'")
+			print(f"Successfully collected {self.max_tweets} tweets per {self.max_users} users. See csv: '{os.path.relpath(self.full_tweets_trunc_csv)}'")
 			return(output_filename_json)
 
 		except Exception as e:
@@ -393,10 +454,9 @@ class TweetProgram:
 		return(self.full_tweets_trunc_json)
 
 	@print_status
-	def get_sentiment(self):
+	def get_sentiment(self, use_cleaned_tweets = False):
 		# make sure that tweets have not already been analyzed
-		if 1 == 1:
-		# if self.step_5_analyzed_full_tweets != 1:
+		if self.step_5_analyzed_full_tweets != 1:
 			# make sure that tweets are full and cleaned
 			if self.step_3_fetched_full_tweets == 1 and self.step_4_cleaned_full_tweets == 1:
 				try:
@@ -408,7 +468,7 @@ class TweetProgram:
 				print("Message: to analyze tweets for sentiment you need to get_full_tweets and clean them.")
 				return False
 		else:
-			print(f"Message: tweets already analyzed. Csv name: '{self.full_tweets_analysis_csv}'")
+			print(f"Message: tweets already analyzed. Csv name: '{os.path.relpath(self.full_tweets_analysis_csv)}'")
 			return False
 
 		full_tweets_index = []
@@ -421,19 +481,22 @@ class TweetProgram:
 				full_tweets_index.append(tup)
 				index += 1
 
-		# open the filtered version of the full tweets list
-		with open(self.full_tweets_trunc_clean_json, 'r') as file:
-			filtered_tweets = json.load(file)
+		if use_cleaned_tweets == True:
+			# open the filtered version of the full tweets list
+			with open(self.full_tweets_trunc_clean_json, 'r') as file:
+				filtered_tweets = json.load(file)
 
-		# filter the full list of tweets
-		filtered_tweets = [full_tweets_index[tweet[0]-1] for tweet in filtered_tweets]
+			# filter the full list of tweets
+			tweets = [full_tweets_index[tweet[0]-1] for tweet in filtered_tweets]
+		else:
+			tweets = full_tweets_index
 
 		tweets_list = []
 		sid = SentimentIntensityAnalyzer() # create senitment analysis object
 		index = 0
 
 		# define fields that we want to pull from tweet data
-		for tweet in filtered_tweets:
+		for tweet in tweets:
 			tweet = tweet[1]
 			index += 1
 			user_id = tweet['user']['id']
@@ -476,7 +539,7 @@ class TweetProgram:
 				writer.writerow(field_names)
 				writer.writerows(tweets_list)	
 
-			print(f"Successfully analyzed tweet sentiment: '{self.full_tweets_analysis_csv}' created.")
+			print(f"Successfully analyzed tweet sentiment: '{os.path.relpath(self.full_tweets_analysis_csv)}' created.")
 			self.step_5_analyzed_full_tweets = 1
 			self.save_obj()
 			return self.full_tweets_analysis_csv
@@ -486,13 +549,18 @@ class TweetProgram:
 
 # create class that inherits (tweepy's) parent class
 class MyStreamListener(tweepy.StreamListener):
-	def __init__(self, option, file_name, max_tweets):
+	def __init__(self, option, file_name, sub_dir, max_tweets):
 		self.file_name = file_name
+		self.sub_dir = sub_dir
 		self.option = option
 		self.max_tweets = max_tweets
 		self.tweets = []
 		self.user_ids = []
 		self.count_users = 0
+		self.cwd = os.path.dirname(__file__)
+		self.rel_path = self.sub_dir + self.file_name
+		self.abs_file_path = os.path.join(self.cwd, self.rel_path)
+
 		super()
 
 	def on_data(self, data):
@@ -516,7 +584,7 @@ class MyStreamListener(tweepy.StreamListener):
 					if self.option == "all_info":
 						self.tweets.append(data)
 						try:
-							with open(self.file_name + ".json", 'a') as f:
+							with open(self.abs_file_path + ".json", 'a') as f:
 								# write to json for every 10 tweets added
 								if len(self.tweets) % 10 == 0:
 									f.seek(0)
@@ -536,7 +604,7 @@ class MyStreamListener(tweepy.StreamListener):
 
 						if len(self.user_ids) % 10 == 0:
 							try:
-								with open(self.file_name + ".json", 'a') as f:
+								with open(self.abs_file_path + ".json", 'a') as f:
 									f.seek(0)
 									f.truncate()
 									f.write(json.dumps(self.user_ids))
@@ -550,8 +618,8 @@ class MyStreamListener(tweepy.StreamListener):
 		# if reached max tweet count, write to csv
 		elif len(self.user_ids) == self.max_tweets:
 			try:
-				output_filename_csv = self.file_name + '.csv'
-				output_filename_json = self.file_name + '.json'
+				output_filename_csv = self.abs_file_path + '.csv'
+				output_filename_json = self.abs_file_path + '.json'
 
 				with open(output_filename_csv, 'w') as csv_output:
 					field_names = ['index','screen_name','user_id','tweet_text']
@@ -559,7 +627,7 @@ class MyStreamListener(tweepy.StreamListener):
 					writer.writerow(field_names)
 					writer.writerows(self.user_ids)
 				
-				print(f"--> Successfully captured {self.max_tweets} tweets for '{self.file_name}'. Ending this stream now. The output is in json and csv format:\n\t- JSON file: {output_filename_json}\n\t- CSV file: {output_filename_csv}\n")
+				print(f"--> Successfully captured {self.max_tweets} tweets for '{self.file_name}'. Ending this stream now. The output is in json and csv format:\n\t- JSON file: {os.path.relpath(output_filename_json)}\n\t- CSV file: {os.path.relpath(output_filename_csv)}\n")
 				return False
 			
 			except Exception as e:
@@ -572,9 +640,27 @@ class MyStreamListener(tweepy.StreamListener):
 
 # wrapper to open stream listener, stream and then filter stream
 def stream_tweets(query, option = 'user_info', file_name = 'user_ids', max_tweets = 150):
-	print(f"Streaming tweets for '{file_name}' ...")
-	myStreamListener = MyStreamListener(option, file_name, max_tweets)
-	myStream = tweepy.Stream(auth = api.auth, listener=myStreamListener)
-	myStream.filter(track=query, languages=['en'], is_async=True)
+	try:
+		index = 1
+
+		# Create new directory to store stream and sample data in.
+		while True:
+			sub_dir = "Samples_Round_" + str(index)
+			
+			if os.path.exists(sub_dir):
+				index += 1
+			else:
+				os.makedirs(sub_dir, exist_ok=False)
+				break
+
+		sub_dir = sub_dir + "/"
+		
+		print(f"Created directory '{sub_dir}' to store data. Streaming tweets for '{file_name}' ...")
+		myStreamListener = MyStreamListener(option, file_name, sub_dir, max_tweets)
+		myStream = tweepy.Stream(auth = api.auth, listener=myStreamListener)
+		myStream.filter(track=query, languages=['en'], is_async=True)
+	
+	except Exception as e:
+		print("Error: ", e)
 
 

@@ -1,9 +1,10 @@
-# Twitter Sentiment Analysis Program
+# Twitter Sentiment Analyzer
+### A program for generating sentiment analysis on Twitter data
 #### Author: Eli Bolotin
 
 ### Program Description -
 
-1. This program is designed to collect, clean and produce sentiment analysis for a statistics experiment using Twitter data.
+1. This program generates (NLTK) sentiment analysis using self-collected and cleaned Twitter data.
 2. The TSA program consists of 3 files:
 	* TwitterProgram.py - core program
 	* StreamTweets.py - executes step 1 
@@ -30,4 +31,4 @@ Consider 2 groups (example): people that talk (tweet) about fitness and people t
 
 See Directions.ipynb
 
-#### Copyright 2018, All Rights Reserved.
+Copyright 2018, All Rights Reserved.

@@ -1,16 +1,16 @@
-# Eli Bolotin
 # Twitter Sentiment Analysis Program
+# Eli Bolotin
 # Copyright 2018, All Rights Reserved.
 
 import tweepy
 import os.path
 import json
 import csv
-import pprint
 import dill
 import re
 import math
 import statistics
+import requests
 from os import makedirs
 from twitter_credentials import *
 from textblob import TextBlob as tb
@@ -57,6 +57,7 @@ def StreamedTweets(file_name_json, sub_dir):
 
 	except Exception as e:
 		print("Error: ", e)
+		return False
 
 # decorator for TweetProgram class methods that prints the activity of a given method.
 def print_status(func):
@@ -86,6 +87,17 @@ def get_abs_path(file_name, sub_dir):
 	else:
 		print("Incorrect directory.")
 		return False
+
+# get list of banned (profane) words
+def get_profanity_list():
+	try:
+		r = requests.get('https://raw.githubusercontent.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words/master/en')
+		profanity_words = r.content.decode("utf-8") 
+		profanity_list = profanity_words.split("\n")
+		return profanity_list
+
+	except Exception as e:
+		print("Error: ", e)
 
 # class for tweet stream json objects that need to be cleaned, fetched in full, and analyzed for sentiment.
 class TweetProgram:
@@ -203,17 +215,11 @@ class TweetProgram:
 			tweet.append(text_len)
 
 		# regex pattern to filter out invalid tweets from streamed data. See readme for details.
-		if self.tweets_type == 'stream':
-			regex = re.compile(r'^(\d)+|^(#\w\b)+|^\"|^\*|^[A-Z]{5, }|[A-Z]$|^How|^The\s\d+|^Photos|(\'\')+|(free|buy|get|class|connect|discount|now|read|job|video|news|follow|added|review|publish|clubs|manager|study|success|limited|release|help|gift|ideas|massage|schedule|services|check|join|pain|therapy|alternative|new\schallenge|product|need|learn|for\smen|for\swomen|revolution|leadership|weight\sloss|diet\splan|ebay|click|promo|certified|store|pick|sign|log-in|login|tips|meet|secret|improve|listen|(\w+)for(\w+)|trainer)|(\$|\+|\@|\?|\?$)|(\.\n\.)|^$', re.IGNORECASE)
-		
-		# regex pattern to filter out invalid tweets from full data. See readme.
-		else:
-			regex = re.compile(r'[^\u0000-\u007F]{5,}|^\s*$|\W{7,}|^(\d)+|^(#\w\b)+|^\"|^\*|^[A-Z]{5, }|[A-Z]$|^How|^The\s\d+|^Photos|(\'\')+|(top\s\d+|free|buy|class|discount|job|review|publish|clubs|manager|study|success|limited|release|help|gift|massage|schedule|services|check|join|pain|therapy|alternative|new\sproduct|learn|for\smen|for\swomen|revolution|leadership|ebay|click|promo|certified|store|pick|sign|log-in|login|tips|meet|secret|(\w+)for(\w+)|trainer)|(\$)|(\.\n\.)', re.IGNORECASE)
+		regex = re.compile(r'[^\u0000-\u007F]{5,}|^\s*$|\W{7,}|^(\d)+|^(#\w\b)+|^\"|^\*|^[A-Z]{5, }|[A-Z]$|^How|^The\s\d+|^Photos|(\'\')+|(top\s\d+|free|buy|get|class|connect|discount|now|read|job|video|news|follow|added|review|publish|clubs|manager|study|success|limited|sex|release|help|gift|ideas|massage|schedule|services|check|join|pain|therapy|alternative|new\schallenge|product|need|learn|for\smen|for\swomen|revolution|leadership|weight\sloss|diet\splan|ebay|click|promo|certified|store|pick|sign|log-in|login|tips|meet|secret|improve|listen|(\w+)for(\w+)|trainer)|(\$|\+|\@|\?|\?$)|(\.\n\.)|^$', re.IGNORECASE)
 
-
-		# get all indices for tweets list, and set excluded indices
-		all_indices = [i for i in range(len(tweets))]
-		excluded_indices = []
+		# get all users in tweet list and create list to hold excluded users
+		all_users = set([tweet[2] for tweet in tweets])
+		excluded_users = []
 
 		# get median hashtag count and also a list of hashtag counts
 		median, hashtag_counts = self._get_median_hashtags(tweets)
@@ -225,36 +231,39 @@ class TweetProgram:
 		if median == 0:
 			median = math.ceil(statistics.mean(hashtag_counts))
 
-		# remove tweets that are 50% or more similar to eachother.
-		if self.tweets_type == "full":
-			for i in range(1, len(tweets)):
-				current_tweet = tweets[i][3]
-				past_tweet = tweets[i-1][3]
-				test = self._percent_same(current_tweet, past_tweet)
+		# get list of profanities and load it
+		profanity_list = get_profanity_list()		
+		profanity.load_words(profanity_list)
 
-				if test >= .5:
-					excluded_indices.append(i)
-		
 		# loop through tweets and hashtag counts and build exclusion index
 		for i, values in enumerate(zip(tweets, hashtag_counts)):
 			tweet = values[0][3]
+			user_id = values[0][2]
 			hashtag_count = values[1]
 			mid_68 = median + stdev
 
-			# exclude tweets that have profanity or a hashtag_count above the median + 1 stdev
-			if profanity.contains_profanity(tweet) == True or hashtag_count > mid_68:
-				excluded_indices.append(i)
+			# testing for spammy tweets
+			current_tweet = tweets[i][3]
+			past_tweet = tweets[i-1][3]
+			test = self._percent_same(current_tweet, past_tweet)
+
+			# testing for profanity
+			profanity_test = profanity.contains_profanity(tweet)
+
+			# exclude authors/users of spammy tweets, or tweets that have profanity, or a hashtag_count above the median + 1 stdev
+			if test >= .5 or profanity_test == True or hashtag_count > mid_68:
+				excluded_users.append(user_id)
 			else:
 				match = regex.search(tweet)
 				if match:
-					excluded_indices.append(i)
+					excluded_users.append(user_id)
 				else:
 					pass
 
-		# filter all_indices to exclude excluded_indices
-		excluded_indices = set(excluded_indices)
-		filtered_indices = list(filter(lambda x:  x not in excluded_indices, all_indices))
-		filtered_tweets = [tweets[index] for index in filtered_indices]
+		# filter out excluded_users from all_users and return filtered tweets
+		excluded_users = set(excluded_users)
+		filtered_users = list(filter(lambda x:  x not in excluded_users, all_users))
+		filtered_tweets = [tweet for tweet in tweets if tweet[2] in filtered_users]
 
 		try:
 			# print to csv
@@ -407,8 +416,9 @@ class TweetProgram:
 		
 		# for readability, create a truncated version of the full json file in both json and csv format.
 		try:
+			len_tweets = len(all_tweets)
 			output_filename_json = self._truncate_and_transform(self.full_tweets_json)
-			print(f"Successfully collected {self.max_tweets} tweets per {self.max_users} users. See csv: '{os.path.relpath(self.full_tweets_trunc_csv)}'")
+			print(f"Successfully collected {len_tweets} tweets. See csv: '{os.path.relpath(self.full_tweets_trunc_csv)}'")
 			return(output_filename_json)
 
 		except Exception as e:
@@ -580,18 +590,18 @@ class MyStreamListener(tweepy.StreamListener):
 				# eliminate retweets, bots, replies, quotes, and sensitive material
 				if not 'RT @' in data['text'] and user_id_len < 18  and reply_to1 == None and reply_to2 == None and quote_status == False and sensitive == False and retweeted == False:
 					
-					# pull all data for each tweet
-					if self.option == "all_info":
-						self.tweets.append(data)
-						try:
-							with open(self.abs_file_path + ".json", 'a') as f:
-								# write to json for every 10 tweets added
-								if len(self.tweets) % 10 == 0:
-									f.seek(0)
-									f.truncate()
-									f.write(json.dumps(self.tweets))
-						except Exception as e:
-							print(e)
+					# # pull all data for each tweet
+					# if self.option == "all_info":
+					# 	self.tweets.append(data)
+					# 	try:
+					# 		with open(self.abs_file_path + ".json", 'a') as f:
+					# 			# write to json for every 10 tweets added
+					# 			if len(self.tweets) % 10 == 0:
+					# 				f.seek(0)
+					# 				f.truncate()
+					# 				f.write(json.dumps(self.tweets))
+					# 	except Exception as e:
+					# 		print(e)
 					
 					# pull just user data for each tweet
 					elif self.option == 'user_info':

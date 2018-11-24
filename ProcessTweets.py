@@ -8,7 +8,7 @@ from TwitterProgram import StreamedTweets, TweetProgram
 
 ### step 1 and 2: stream tweets (using StreamTweets.py)
 ### step 3: instantiate object and clean tweets
-group_1 = StreamedTweets("streamed_tweets_media.json", sub_dir="Samples_Round_2")
+group_1 = StreamedTweets("streamed_tweets_media.json", sub_dir="Samples_Round_1")
 group_1.clean_tweets()
 
 ### step 4: fetch other tweets
@@ -21,7 +21,7 @@ group_1.get_sentiment()
 
 ### step 1 and 2: stream tweets (using StreamTweets.py)
 ### step 3: instantiate object and clean tweets
-group_2 = StreamedTweets("streamed_tweets_fitness.json", sub_dir="Samples_Round_2")
+group_2 = StreamedTweets("streamed_tweets_fitness.json", sub_dir="Samples_Round_1")
 group_2.clean_tweets()
 
 ### step 4: fetch other tweets

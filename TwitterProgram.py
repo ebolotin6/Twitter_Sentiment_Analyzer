@@ -213,7 +213,7 @@ class TweetProgram:
 			tweet.append(text)
 			tweet.append(text_len)
 
-		# regex pattern to filter out invalid tweets from streamed data. See readme for details.
+		# regex pattern to filter out invalid tweets from streamed data. See Regex_README.md for details.
 		regex = re.compile(r'[^\u0000-\u007F]{5,}|^\s*$|\W{7,}|^(\d)+|^(#\w\b)+|^\"|^\*|^[A-Z]{5, }|[A-Z]$|^How|^The\s\d+|^Photos|(\'\')+|(top\s\d+|free|buy|get|class|connect|discount|now|read|job|video|news|follow|added|review|publish|clubs|manager|study|success|limited|sex|release|help|gift|ideas|massage|schedule|services|check|join|pain|therapy|alternative|new\schallenge|product|need|learn|for\smen|for\swomen|revolution|leadership|weight\sloss|diet\splan|ebay|click|promo|certified|store|pick|sign|log-in|login|tips|meet|secret|improve|listen|(\w+)for(\w+)|trainer)|(\$|\+|\@|\?|\?$)|(\.\n\.)|^$', re.IGNORECASE)
 
 		# get all users in tweet list and create list to hold excluded users
@@ -310,7 +310,6 @@ class TweetProgram:
 		for i, tweet in enumerate(tweets):
 			tweet = tweet[3]
 			num_hashtags = tweet.count("#")
-			# print(f"{i} --- {tweet} --- {num_hashtags}")
 			hashtag_counts.append(num_hashtags)
 
 		hashtag_counts_sorted = sorted(hashtag_counts)
@@ -328,6 +327,21 @@ class TweetProgram:
 
 		median = round(median, 2)
 		return(median, hashtag_counts)
+
+	def _write_tweets(self, file_name = None, tweets_list = None):
+		if file_name != None and tweets_list != None:
+			try:
+				with open(file_name, 'a') as file:
+					file.seek(0)
+					file.truncate()
+					file.write(json.dumps(tweets_list))
+
+				return True
+			except Exception as e:
+				print(e)
+				return False
+		else:
+			print("Pass proper arguments, please.")
 
 	@print_status
 	def get_full_tweets(self, tweets_cleaned = "yes", max_tweets = None, max_users = None):
@@ -408,21 +422,22 @@ class TweetProgram:
 				pass
 
 			if len(all_tweets) % 10 == 0:
-				with open(self.full_tweets_json, 'a') as file:
-					file.seek(0)
-					file.truncate()
-					file.write(json.dumps(all_tweets))
-		
-		# for readability, create a truncated version of the full json file in both json and csv format.
-		try:
-			len_tweets = len(all_tweets)
-			output_filename_json = self._truncate_and_transform(self.full_tweets_json)
-			print(f"Successfully collected {len_tweets} tweets. See csv: '{os.path.relpath(self.full_tweets_trunc_csv)}'")
-			return(output_filename_json)
+				self._write_tweets(self.full_tweets_json, all_tweets)
 
-		except Exception as e:
-			print("Error: ", e)
-			return False
+		# for readability, create a truncated version of the full json file in both json and csv format.
+		else:
+			write_tweets = self._write_tweets(self.full_tweets_json, all_tweets)
+			len_tweets = len(all_tweets)
+
+			if write_tweets == True:
+				try:
+					output_filename_json = self._truncate_and_transform(self.full_tweets_json)
+					print(f"Successfully collected {len_tweets} tweets. See csv: '{os.path.relpath(self.full_tweets_trunc_csv)}'")
+					return(output_filename_json)
+
+				except Exception as e:
+					print("Error: ", e)
+					return False
 
 	def _truncate_and_transform(self, input_json):
 		# this function truncates a json list of (complete) tweet data to a readable csv (with only 4 columns) and also to json format.
@@ -467,7 +482,7 @@ class TweetProgram:
 		# make sure that tweets have not already been analyzed
 		if self.step_5_analyzed_full_tweets != 1:
 			# make sure that tweets are full and cleaned
-			if self.step_3_fetched_full_tweets == 1 and self.step_4_cleaned_full_tweets == 1:
+			if self.step_3_fetched_full_tweets == 1:
 				try:
 					with open(self.full_tweets_json, 'r') as file:
 						full_tweets = json.load(file)
@@ -589,21 +604,8 @@ class MyStreamListener(tweepy.StreamListener):
 				# eliminate retweets, bots, replies, quotes, and sensitive material
 				if not 'RT @' in data['text'] and user_id_len < 18  and reply_to1 == None and reply_to2 == None and quote_status == False and sensitive == False and retweeted == False:
 					
-					# # pull all data for each tweet
-					# if self.option == "all_info":
-					# 	self.tweets.append(data)
-					# 	try:
-					# 		with open(self.abs_file_path + ".json", 'a') as f:
-					# 			# write to json for every 10 tweets added
-					# 			if len(self.tweets) % 10 == 0:
-					# 				f.seek(0)
-					# 				f.truncate()
-					# 				f.write(json.dumps(self.tweets))
-					# 	except Exception as e:
-					# 		print(e)
-					
 					# pull just user data for each tweet
-					elif self.option == 'user_info':
+					if self.option == 'user_info':
 						self.count_users += 1
 						self.screen_name = data['user']['screen_name']
 						self.user_id = data['user']['id']

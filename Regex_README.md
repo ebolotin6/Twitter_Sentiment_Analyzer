@@ -1,6 +1,8 @@
 # Twitter Sentiment Analyzer
-### Notes on Regex filter in clean_tweets method of TwitterProgram class
+### Notes on Regex filter in clean_tweets() method of TwitterProgram class
 #### Author: Eli Bolotin
+
+
 
 The Regex filter is designed to filter out specifc tweets (and users) from the streamed tweets file. Below is a breakdown of exactly what is filtered out:
 

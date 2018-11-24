@@ -28,8 +28,17 @@ Consider 2 groups (example): people that talk (tweet) about fitness and people t
 5. Run sentiment analysis for fetched tweets.
 6. Conduct statistical analysis in R.
 
-### Directions -
+### Instructions -
 
-See Directions.ipynb
+1. Add your twitter credentials to *twitter_credentials.py*
+2. See *instructions.ipynb* for instructions on how to execute program.
+
+### Important notes before using:
+
+1. Install any missing packages and be patient when they load.
+	- TwitterProgram.py is an entire statistics experiment built into a relatively simple program. In 5 methods, data is collected, cleaned, and analyzed for sentiment.
+2. Make sure your Twitter credentials are valid. See instructions.
+3. This program is designed to run efficiently and to handle Twitter rate limiting without interruption. However, do not abuse Twitter's API request/access policy, as they will ban you.
+4. Use this program responsibly.
 
 Copyright 2018, All Rights Reserved.

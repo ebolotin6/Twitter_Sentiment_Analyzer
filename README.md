@@ -40,6 +40,6 @@ Consider 2 groups (example): people that talk (tweet) about fitness and people t
 1. Install any missing packages and be patient when they load.
 	- TwitterProgram.py is a program that conducts the pre-work for a statistics experiment. In 4 methods, data is collected, cleaned, and analyzed for sentiment. This requires various packages that take time to load.
 2. Make sure your Twitter credentials are valid. See instructions.
-3. This program is designed to handle Twitter rate limiting without interruption. However, do not abuse Twitter's API request/access policy, as they will ban you.
+3. High-volume requests to Twitter's (free) API may result in a ban. Be careful.
 
 Copyright 2018, All Rights Reserved.

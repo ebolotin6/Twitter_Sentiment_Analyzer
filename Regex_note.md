@@ -1,9 +1,6 @@
 # Twitter Sentiment Analyzer
-### A program for generating sentiment analysis on Twitter data
-#### Author: Eli Bolotin
-
-
 ### Notes on Regex filter in clean_tweets method of TwitterProgram class
+#### Author: Eli Bolotin
 
 The Regex filter is designed to filter out specifc tweets (and users) from the streamed tweets file. Below is a breakdown of exactly what is filtered out:
 
@@ -76,3 +73,6 @@ for\smen|for\swomen|revolution|leadership|weight\sloss|diet\splan|ebay|click|pro
 
 **^\$**
 - Str starts with $
+
+
+Copyright 2018, All Rights Reserved.

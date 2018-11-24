@@ -4,7 +4,7 @@
 
 
 
-The Regex filter is designed to filter out specifc tweets (and users) from the streamed tweets file. Below is a breakdown of exactly what is filtered out:
+This regex filter is designed to filter out specifc tweets (and users) from the streamed tweets file. Below is a breakdown of exactly what is filtered out:
 
 **[^\u0000-\u007F]{5,}** 
 - Str begins with 5 or more non-ASCII letters. Meant to filter out non-English tweets.

@@ -20,6 +20,7 @@ The original question that this program was designed to answer was:
 ### Example experiment -
 
 Consider 2 groups (example): people that talk (tweet) about fitness and people that tweet about media. To conduct the experiment, follow the steps below:
+
 1. Create (unbiased) keywords and hashtags that define these groups. 
 2. Stream tweets using keywords/hashtags for both groups (Twitter Stream API)
 3. Clean the streamed tweets (via program)

@@ -10,7 +10,7 @@ keywords_m = ['watching show','watch season','netflix','movie','new season','wat
 
 ### Step 1: define keywords and hashtags for fitness group
 
-keywords_f = ['health fitness','fitness','legday','workoutwednesday','treadmill','pilates','yoga','gym time','deadlift','squats','FitnessFriday','gymlife','workouts','fitness training','postgym','armday','shoulderday','fitnessgoals','runner','workout','workout motivation','lift hard','lift weight','go running','crossfit','morning workout','muscle','six pack','lunges','cardio','elliptical','cycling','#health','#gymtime','#fitnesstraining','#workoutmotivation','#lifthard','#liftweight','#gorunning','#sweatforit','#morningworkout','#sixpack','#triathlon']
+keywords_f = ['health fitness', 'fitness', 'legday', 'workoutwednesday', 'treadmill', 'pilates', 'yoga', 'gym time', 'deadlift', 'squats', 'FitnessFriday', 'gymlife', 'workouts', 'fitness training', 'postgym', 'armday', 'shoulderday', 'fitnessgoals', 'runner', 'workout', 'workout motivation', 'lift hard', 'lift weight', 'go running', 'crossfit', 'morning workout', 'muscle', 'six pack', 'lunges', 'cardio', 'elliptical', 'cycling', '#health', '#gymtime', '#fitnesstraining', '#workoutmotivation', '#lifthard', '#liftweight', '#gorunning', '#sweatforit', '#morningworkout', '#sixpack', '#triathlon']
 
 ########################
 #	 Execution   

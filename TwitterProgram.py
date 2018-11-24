@@ -59,7 +59,7 @@ def StreamedTweets(file_name_json, sub_dir):
 		print("Error: ", e)
 		return False
 
-# decorator for TweetProgram class methods that prints the activity of a given method.
+# decorator for TwitterProgram class methods that prints the activity of a given method.
 def print_status(func):
 	def wrapper(self, **kwargs):
 		if func.__name__ == 'clean_tweets':
@@ -167,8 +167,7 @@ class TweetProgram:
 
 		self.save_obj()
 
-	# Decorator and clean_tweets method. This method cleans & filters a json dict of tweets and returns both json and csv files of the tweets data. 
-	# Details: There 2 types of tweets data. One is the 'stream' data, which is the original, streamed data. Streamed data contains 5 fields related to each streamed tweet. These are mostly user fields and there are only 5 of them because streamed data is meant to be observed, not analyzed. The other is a 'full' data, which is fetched using the streamed data. Full data is defined as the: the most recent 20 tweets that are written by each author of the first hundred tweets in the streamed data. The full data is stored as a (json) dictionary and contains all fields related to every tweet.
+	# Clean_tweets method. This method cleans & filters a json dict of tweets and returns both json and csv files of the tweets data.
 	@print_status
 	def clean_tweets(self, tweets_type = None):
 		# identify if the type of tweet

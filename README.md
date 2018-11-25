@@ -9,7 +9,7 @@ This program serves as an all-in-one method of data collection, cleaning, and se
 1. This program creates (NLTK) sentiment analysis using self-collected and cleaned Twitter data.
 2. Program consists of 3 files:
 	* **TwitterProgram.py** - core program
-	* **StreamTweets.py** - executes step 1, 2
+	* **StreamTweets.py** - executes steps 1, 2
 	* **ProcessTweets.py** - executes steps 3, 4, 5
 3. Output: sentiment analysis
 

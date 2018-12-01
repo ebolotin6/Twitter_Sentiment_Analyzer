@@ -42,4 +42,4 @@ Consider 2 groups (example): people that talk (tweet) about fitness and people t
 2. Make sure your Twitter credentials are valid. See instructions.
 3. High-volume requests to Twitter's (free) API may result in a ban. Be careful.
 
-Copyright 2018, All Rights Reserved.
+Copyright 2018 Eli Bolotin, All Rights Reserved.

@@ -1,5 +1,5 @@
 # Twitter Sentiment Analyzer
-### Notes on Regex filter in clean_tweets() method of TwitterProgram class
+### Notes on Regex filter in *clean_tweets()* method of *TwitterProgram* class
 #### Author: Eli Bolotin
 
 
@@ -50,9 +50,9 @@ for\smen|for\swomen|revolution|leadership|weight\sloss|diet\splan|ebay|click|pro
 - Str contains any one of these words or phrases
 
 **(\\w+)for(\\w+)**
-- Str contains one or more words followed by for followed by one or more words
+- Str contains one or more words followed by one or more words
 
-**trainer)**
+**trainer**
 - Str contains the word trainer
 
 **\\$**

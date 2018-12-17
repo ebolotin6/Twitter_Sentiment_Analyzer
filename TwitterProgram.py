@@ -170,7 +170,7 @@ class TweetProgram:
 	# Clean_tweets method. This method cleans & filters a json dict of tweets and returns both json and csv files of the tweets data.
 	@print_status
 	def clean_tweets(self, tweets_type = None):
-		# identify if the type of tweet
+		# identify the type of tweet
 		if tweets_type == None:
 			self.tweets_type = "stream"
 		else:
@@ -185,6 +185,7 @@ class TweetProgram:
 			except Exception as e:
 				print(f"Message: Streamed tweets file not found: '{os.path.relpath(self.streamed_tweets_json)}'")
 				return False
+		
 		# check if streamed tweets have already been cleaned before.
 		elif self.step_2_cleaned_streamed_tweets == 1 and self.tweets_type == "stream":
 			print(f"Message: You already cleaned your tweet stream. Csv file here: '{os.path.relpath(self.cleaned_streamed_tweets_csv)}'")

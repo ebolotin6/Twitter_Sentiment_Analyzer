@@ -1,6 +1,6 @@
 # Eli Bolotin
 # Twitter Sentiment Analysis Program
-# Copyright 2018, All Rights Reserved.
+# Copyright 2018
 
 from TwitterProgram import MyStreamListener, stream_tweets
 

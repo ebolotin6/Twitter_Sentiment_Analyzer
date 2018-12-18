@@ -77,4 +77,4 @@ for\smen|for\swomen|revolution|leadership|weight\sloss|diet\splan|ebay|click|pro
 - Str starts with $
 
 
-Copyright 2018 Eli Bolotin, All Rights Reserved.
+Copyright 2018 Eli Bolotin

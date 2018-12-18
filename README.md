@@ -45,11 +45,11 @@ Consider 2 groups (example): people that tweet about fitness and people that twe
 ### Sources on sentiment analysis
 
 * NLTK Vader
-	* (VADER Sentiment Analysis Explained)[http://datameetsmedia.com/vader-sentiment-analysis-explained/]
-	* (Tutorial)[https://nlpforhackers.io/sentiment-analysis-intro/]
-	* (Source code)[https://www.nltk.org/_modules/nltk/sentiment/vader.html]
+	* [VADER Sentiment Analysis Explained](http://datameetsmedia.com/vader-sentiment-analysis-explained/)
+	* [Tutorial](https://nlpforhackers.io/sentiment-analysis-intro/)
+	* [Source code](https://www.nltk.org/_modules/nltk/sentiment/vader.html)
 
 * TextBlob
-	* (Documentation)[https://textblob.readthedocs.io/en/dev/]
+	* [Documentation](https://textblob.readthedocs.io/en/dev/)
 
 Copyright 2018 Eli Bolotin
